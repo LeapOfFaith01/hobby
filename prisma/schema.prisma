@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Costumer section
+model Customer {
+  id         String       @id @default(uuid())
+  name       String
+  address    Address[]
+  contacts   Contact[]
+  equipament Equipament[]
+
+  @@map("customers")
+}
+
+model Address {
+  id         String    @id @default(uuid())
+  streetName String //Nome da rua
+  number     Decimal //Numero da casa
+  district   String //Bairro
+  city       String //Cidade
+  state      String //Estado
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  @@map("address")
+}
+
+model Contact {
+  id         String    @id @default(uuid())
+  phone      String
+  email      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  @@map("contacts")
+}
+
+//End costumer section
+
+model Equipament {
+  id           String            @id @default(uuid())
+  model        String?
+  serialNumber String?
+  status       EQUIPAMENT_STATUS @default(WAITING_EVALUATION)
+  budget       Budget            @relation(fields: [budgetId], references: [id])
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  Customer     Customer?         @relation(fields: [customerId], references: [id])
+  customerId   String?
+  budgetId     String
+
+  @@map("equipaments")
+}
+
+model Budget {
+  id          String       @id @default(uuid())
+  description String
+  payments    Payment[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Equipament  Equipament[]
+
+  @@map("budgets")
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  type      PAYTYPE  @default(EVALUATION)
+  ammout    Decimal
+  paid      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Budget    Budget?  @relation(fields: [budgetId], references: [id])
+  budgetId  String?
+
+  @@map("payments")
+}
+
+enum PAYTYPE {
+  EVALUATION
+  SERVICE
+}
+
+enum EQUIPAMENT_STATUS {
+  WAITING_EVALUATION
+  WAITING_CLIENT_APPROVE
+  WAITING_FOR_REPAIR
+  WAITING_FOR_PARTS
+  WAITING_FOR_WITHDRAWAL
+  FINALIZED
+}
